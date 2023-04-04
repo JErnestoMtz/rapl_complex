@@ -42,6 +42,8 @@ impl <T: Float> C<T>{
 #[cfg(test)]
 mod tests {
 
+use std::f32::consts::PI;
+
 use super::*;
 
   #[test]
