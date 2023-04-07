@@ -1,29 +1,28 @@
-use std::ops::{Neg,Mul,Add};
 use num_traits::Float;
-mod primitives;
-mod ops;
+use std::ops::{Add, Div, Mul, Neg};
 mod floats;
+mod ops;
+mod primitives;
+mod cast;
 
-pub use crate::primitives::Im;
+pub use crate::primitives::Imag;
 
-
-
-#[derive(Debug,PartialEq,Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct C<T: Copy + PartialEq>(pub T, pub T);
 
-impl <T: Copy + PartialEq> C<T> {
-   pub fn re(&self)->T{
-    self.0
-   } 
-   pub fn im(&self)->T{
-    self.1
-   }
+impl<T: Copy + PartialEq> C<T> {
+    pub fn re(&self) -> T {
+        self.0
+    }
+    pub fn im(&self) -> T {
+        self.1
+    }
 }
 
-impl <T: Copy + PartialEq + Neg<Output = T>> C<T>{
-   pub fn conj(&self)->C<T>{
+impl<T: Copy + PartialEq + Neg<Output = T>> C<T> {
+    pub fn conj(&self) -> C<T> {
         C(self.0, -self.1)
-   }
+    }
 }
 
 impl<T: Copy + PartialEq + Add<Output = T> + Mul<Output = T>> C<T> {
@@ -32,32 +31,64 @@ impl<T: Copy + PartialEq + Add<Output = T> + Mul<Output = T>> C<T> {
     }
 }
 
-impl <T: Float> C<T>{
-   pub fn from_polar(r: T, angle: T)->C<T>{
-        let unit = C(T::from(0).unwrap(), angle).exp();
-        C(r * unit.0, r * unit.1)
-   }
+impl<T> C<T>
+where
+    T: Copy + PartialEq + Neg<Output = T> + Div<Output = T> + Mul<Output = T> + Add<Output = T>,
+{
+    pub fn inv(&self) -> Self {
+        let r_sq = self.r_square();
+        C(self.0 / r_sq, -self.1 / r_sq)
+    }
 }
+
+
 
 #[cfg(test)]
 mod tests {
 
-use std::f32::consts::PI;
+    use std::f32::consts::PI;
 
-use super::*;
+    use super::*;
 
-  #[test]
-  fn test_add() {
-    assert_eq!( 1 + 1.im(), C(1,1));
-    assert_eq!( 1.im() + 1, C(1,1));
-    assert_eq!( C(0., 2.) + C(2., 3.), C(2.,5.));
-  }
+    #[test]
+    fn test_add() {
+        assert_eq!(1 + 1.i(), C(1, 1));
+        assert_eq!(1.i() + 1, C(1, 1));
+        assert_eq!(C(0., 2.) + C(2., 3.), C(2., 5.));
+    }
 
-  #[test]
-  fn test_sub() {
-    assert_eq!( 1 - 1.im(), C(1,-1));
-    assert_eq!( 1.im() - 1, C(-1,1));
-    assert_eq!( C(0., 2.) - C(2., 3.), C(-2.,-1.));
-  }
+    #[test]
+    fn test_sub() {
+        assert_eq!(1 - 1.i(), C(1, -1));
+        assert_eq!(1.i() - 1, C(-1, 1));
+        assert_eq!(C(0., 2.) - C(2., 3.), C(-2., -1.));
+    }
+
+    #[test]
+    fn test_mul() {
+        let c1 = 2 + 3.i();
+        let c2 = 4 + 5.i();
+        let expected = -7 + 22.i();
+        assert_eq!(c1 * c2, expected);
+    }
+
+    #[test]
+    fn test_division() {
+        let c1 = C(2., 3.);
+        let c2 = C(4., 5.);
+        let expected = C(23. / 41., 2./ 41.);
+        assert_eq!(c1 / c2, expected);
+    }
+
+    #[test]
+    fn test_conj(){
+        let a: C<i32> = 2 + 3.i();
+        assert!((a * a.conj()).re() == a.r_square())
+    }
+
+
+
 
 }
+
+

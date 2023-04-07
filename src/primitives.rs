@@ -1,12 +1,12 @@
 use super::*;
 
-pub trait Im<T: Copy + PartialEq>{
-    fn im(&self)->C<T>;
+pub trait Imag<T: Copy + PartialEq> {
+    fn i(&self) -> C<T>;
 }
-macro_rules!  prim_to_im{
+macro_rules! prim_to_im {
     ($T:tt) => {
-        impl Im<$T> for $T{
-            fn im(&self)->C<$T> {
+        impl Imag<$T> for $T {
+            fn i(&self) -> C<$T> {
                 C(0_u8 as $T, *self)
             }
         }
